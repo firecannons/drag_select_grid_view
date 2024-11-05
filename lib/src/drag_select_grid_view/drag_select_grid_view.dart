@@ -279,7 +279,7 @@ class DragSelectGridViewState extends State<DragSelectGridView>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return GestureDetector(
+    return  GestureDetector(
       onTapUp: _handleTapUp,
       onLongPressStart: _handleLongPressStart,
       onLongPressMoveUpdate: _handleLongPressMoveUpdate,
@@ -288,7 +288,7 @@ class DragSelectGridViewState extends State<DragSelectGridView>
       child: IgnorePointer(
         ignoring: isDragging,
         child: GridView.builder(
-          controller: widget.scrollController,
+          controller: widget.gridScrollController,
           reverse: widget.reverse,
           primary: widget.primary,
           physics: widget.physics,
@@ -322,7 +322,9 @@ class DragSelectGridViewState extends State<DragSelectGridView>
           },
         ),
       ),
-    );
+    )
+    
+    ;
   }
 
   void _onSelectionChanged() {
@@ -382,8 +384,9 @@ class DragSelectGridViewState extends State<DragSelectGridView>
       setState(() => _selectionManager.updateDrag(dragIndex));
       _notifySelectionChange();
     }
-
-    Offset adjustedOffset = adjustLocalToReferenceFrame(details.localPosition, -scrollDragStartPos);
+    Offset adjustedOffset = details.localPosition;
+    //adjustedOffset = adjustLocalToReferenceFrame(details.localPosition, -scrollDragStartPos);
+    print('details ' + details.localPosition.toString() + " " + scrollDragStartPos.toString() );
     /*if(scrollController.positions.length > 0)
     {
       adjustedOffset = Offset(
@@ -467,7 +470,7 @@ class DragSelectGridViewState extends State<DragSelectGridView>
     }());
 
 
-    offset = adjustLocalToReferenceFrame(offset, scrollController.positions.elementAt(0).pixels - scrollDragStartPos);
+    //offset = adjustLocalToReferenceFrame(offset, scrollController.positions.elementAt(0).pixels - scrollDragStartPos);
     final element = elementFinder(
       (element) => element.containsOffset(ancestor, offset),
     );
