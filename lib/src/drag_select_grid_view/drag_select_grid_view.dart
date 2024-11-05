@@ -219,6 +219,7 @@ class DragSelectGridViewState extends State<DragSelectGridView>
   final _selectionManager = SelectionManager();
   LongPressMoveUpdateDetails? _lastMoveUpdateDetails;
   LocalHistoryEntry? _historyEntry;
+  double scrollDragStartPos = 0;
 
   DragSelectGridViewController? get _gridController => widget.gridController;
 
@@ -349,12 +350,23 @@ class DragSelectGridViewState extends State<DragSelectGridView>
 
   void _handleLongPressStart(LongPressStartDetails details) {
     final pressIndex = _findIndexOfSelectable(details.localPosition);
+    scrollDragStartPos = scrollController.positions.elementAt(0).pixels;
 
     if (pressIndex != -1) {
       setState(() => _selectionManager.startDrag(pressIndex));
       _notifySelectionChange();
       _updateLocalHistory();
     }
+  }
+
+  Offset adjustLocalToReferenceFrame(Offset local, double difference)
+  {
+    Offset adjustedOffset = Offset(
+      local.dx,
+      local.dy + difference
+    );
+    print('adjusting ' + local.toString() + ' ' + difference.toString());
+    return adjustedOffset;
   }
 
   void _handleLongPressMoveUpdate(LongPressMoveUpdateDetails details) {
@@ -368,14 +380,14 @@ class DragSelectGridViewState extends State<DragSelectGridView>
       _notifySelectionChange();
     }
 
-    Offset adjustedOffset = details.globalPosition;
-    if(scrollController.positions.length > 0)
+    Offset adjustedOffset = adjustLocalToReferenceFrame(details.localPosition, -scrollDragStartPos);
+    /*if(scrollController.positions.length > 0)
     {
       adjustedOffset = Offset(
-        details.globalPosition.dx,
-        details.globalPosition.dy - 120
+        details.localPosition.dx,
+        details.localPosition.dy - scrollDragStartPos
       );
-    }
+    }*/
 
 //startAutoScrollingForward();
 //if(gridScrollController != null)
@@ -387,8 +399,8 @@ class DragSelectGridViewState extends State<DragSelectGridView>
 );*/
 //}
 
-    print('long press move ' + adjustedOffset.dy.toString() + ' '
-      + details.globalPosition.dy.toString() + ' ' + scrollController.positions.elementAt(0).pixels.toString());
+    /*print('long press move ' + adjustedOffset.dy.toString() + ' '
+      + details.localPosition.dy.toString() + ' ' + scrollController.positions.elementAt(0).pixels.toString());*/
 
     if (isInsideUpperAutoScrollHotspot(adjustedOffset)) {
       print('scrolling up');
@@ -451,6 +463,8 @@ class DragSelectGridViewState extends State<DragSelectGridView>
       return true;
     }());
 
+
+    offset = adjustLocalToReferenceFrame(offset, scrollController.positions.elementAt(0).pixels - scrollDragStartPos);
     final element = elementFinder(
       (element) => element.containsOffset(ancestor, offset),
     );
