@@ -338,6 +338,7 @@ class DragSelectGridViewState extends State<DragSelectGridView>
 
   void _handleTapUp(TapUpDetails details) {
     if (isSelecting || widget.triggerSelectionOnTap) {
+      scrollDragStartPos = scrollController.positions.elementAt(0).pixels;
       final tapIndex = _findIndexOfSelectable(details.localPosition);
 
       if (tapIndex != -1) {
@@ -349,8 +350,10 @@ class DragSelectGridViewState extends State<DragSelectGridView>
   }
 
   void _handleLongPressStart(LongPressStartDetails details) {
-    final pressIndex = _findIndexOfSelectable(details.localPosition);
+
     scrollDragStartPos = scrollController.positions.elementAt(0).pixels;
+    final pressIndex = _findIndexOfSelectable(details.localPosition);
+    print('starting at ' + pressIndex.toString());
 
     if (pressIndex != -1) {
       setState(() => _selectionManager.startDrag(pressIndex));
