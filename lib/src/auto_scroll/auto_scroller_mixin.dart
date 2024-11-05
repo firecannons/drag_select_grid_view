@@ -46,7 +46,7 @@ mixin AutoScrollerMixin<T extends StatefulWidget> on State<T> {
     WidgetsBinding.instance.addPostFrameCallback(
       (callback) {
         final widgetSize = context.size!;
-        _widgetHeight = widgetSize.height;
+        _widgetHeight = scrollController.positions.elementAt(0).viewportDimension;
         _widgetWidth = widgetSize.width;
         if (scrollController.hasClients) {
           scrollController.position.addListener(handleScroll);
@@ -78,14 +78,20 @@ mixin AutoScrollerMixin<T extends StatefulWidget> on State<T> {
   }
 
   /// Returns whether the [localPosition] is in upper-hotspot's bounds.
-  bool isInsideUpperAutoScrollHotspot(Offset localPosition) =>
-      _isInsideWidget(localPosition) &&
+  bool isInsideUpperAutoScrollHotspot(Offset localPosition)
+  {
+    bool ok = _isInsideWidget(localPosition) &&
       localPosition.dy <= autoScrollHotspotHeight;
+    return ok;
+  }
 
   /// Returns whether the [localPosition] is in lower-hotspot's bounds.
-  bool isInsideLowerAutoScrollHotspot(Offset localPosition) =>
-      _isInsideWidget(localPosition) &&
+  bool isInsideLowerAutoScrollHotspot(Offset localPosition)
+  {
+    bool ok = _isInsideWidget(localPosition) &&
       localPosition.dy > (_widgetHeight - autoScrollHotspotHeight);
+    return ok;
+  }
 
   /// Scrolls forward indefinitely.
   ///
@@ -94,7 +100,7 @@ mixin AutoScrollerMixin<T extends StatefulWidget> on State<T> {
     _updateAutoScrollIfDifferent(
       AutoScroll(
         direction: AutoScrollDirection.forward,
-        duration: const Duration(seconds: 3),
+        duration: const Duration(seconds: 1),
       ),
     );
   }
@@ -106,7 +112,7 @@ mixin AutoScrollerMixin<T extends StatefulWidget> on State<T> {
     _updateAutoScrollIfDifferent(
       AutoScroll(
         direction: AutoScrollDirection.backward,
-        duration: const Duration(seconds: 3),
+        duration: const Duration(seconds: 1),
       ),
     );
   }
