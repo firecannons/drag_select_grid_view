@@ -192,21 +192,6 @@ class DragSelectGridView extends StatefulWidget {
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /// The state for a grid that supports both dragging and tapping to select its
 /// items.
 @visibleForTesting
