@@ -95,7 +95,6 @@ class DragSelectGridView extends StatefulWidget {
     this.restorationId,
     this.clipBehavior = Clip.hardEdge,
     this.impliesAppBarDismissal = true,
-    this.gridScrollController,
   })  : autoScrollHotspotHeight =
             autoScrollHotspotHeight ?? defaultAutoScrollHotspotHeight,
         scrollController = scrollController ?? ScrollController(),
@@ -111,8 +110,6 @@ class DragSelectGridView extends StatefulWidget {
 
   /// Refer to [ScrollView.controller].
   final ScrollController scrollController;
-
-  final ScrollController? gridScrollController;
 
   /// Controller of the grid.
   ///
@@ -219,11 +216,8 @@ class DragSelectGridViewState extends State<DragSelectGridView>
   final _selectionManager = SelectionManager();
   LongPressMoveUpdateDetails? _lastMoveUpdateDetails;
   LocalHistoryEntry? _historyEntry;
-  double scrollDragStartPos = 0;
 
   DragSelectGridViewController? get _gridController => widget.gridController;
-
-  
 
   /// Indexes selected by dragging or tapping.
   Set<int> get selectedIndexes => _selectionManager.selectedIndexes;
@@ -240,19 +234,7 @@ class DragSelectGridViewState extends State<DragSelectGridView>
   double get autoScrollHotspotHeight => widget.autoScrollHotspotHeight;
 
   @override
-  ScrollController get scrollController
-  {
-    if(widget.gridScrollController != null)
-    {
-      return widget.gridScrollController as ScrollController;
-    }
-    else
-    {
-      return widget.scrollController;
-    }
-  }
-
-
+  ScrollController get scrollController => widget.scrollController;
 
   @override
   void handleScroll() {
@@ -288,7 +270,7 @@ class DragSelectGridViewState extends State<DragSelectGridView>
       child: IgnorePointer(
         ignoring: isDragging,
         child: GridView.builder(
-          controller: widget.gridScrollController,
+          controller: scrollController,
           reverse: widget.reverse,
           primary: widget.primary,
           physics: widget.physics,
@@ -322,9 +304,7 @@ class DragSelectGridViewState extends State<DragSelectGridView>
           },
         ),
       ),
-    )
-    
-    ;
+    );
   }
 
   void _onSelectionChanged() {
@@ -340,7 +320,6 @@ class DragSelectGridViewState extends State<DragSelectGridView>
 
   void _handleTapUp(TapUpDetails details) {
     if (isSelecting || widget.triggerSelectionOnTap) {
-      scrollDragStartPos = scrollController.positions.elementAt(0).pixels;
       final tapIndex = _findIndexOfSelectable(details.localPosition);
 
       if (tapIndex != -1) {
@@ -352,26 +331,13 @@ class DragSelectGridViewState extends State<DragSelectGridView>
   }
 
   void _handleLongPressStart(LongPressStartDetails details) {
-
-    scrollDragStartPos = scrollController.positions.elementAt(0).pixels;
     final pressIndex = _findIndexOfSelectable(details.localPosition);
-    print('starting at ' + pressIndex.toString());
 
     if (pressIndex != -1) {
       setState(() => _selectionManager.startDrag(pressIndex));
       _notifySelectionChange();
       _updateLocalHistory();
     }
-  }
-
-  Offset adjustLocalToReferenceFrame(Offset local, double difference)
-  {
-    Offset adjustedOffset = Offset(
-      local.dx,
-      local.dy + difference
-    );
-    print('adjusting ' + local.toString() + ' ' + difference.toString());
-    return adjustedOffset;
   }
 
   void _handleLongPressMoveUpdate(LongPressMoveUpdateDetails details) {
@@ -384,39 +350,14 @@ class DragSelectGridViewState extends State<DragSelectGridView>
       setState(() => _selectionManager.updateDrag(dragIndex));
       _notifySelectionChange();
     }
-    Offset adjustedOffset = details.localPosition;
-    //adjustedOffset = adjustLocalToReferenceFrame(details.localPosition, -scrollDragStartPos);
-    print('details ' + details.localPosition.toString() + " " + scrollDragStartPos.toString() );
-    /*if(scrollController.positions.length > 0)
-    {
-      adjustedOffset = Offset(
-        details.localPosition.dx,
-        details.localPosition.dy - scrollDragStartPos
-      );
-    }*/
 
-//startAutoScrollingForward();
-//if(gridScrollController != null)
-//{
-/*scrollController?.animateTo(
-  300,
-  duration: Duration(milliseconds: 200),
-  curve: Curves.easeInOut
-);*/
-//}
-
-    /*print('long press move ' + adjustedOffset.dy.toString() + ' '
-      + details.localPosition.dy.toString() + ' ' + scrollController.positions.elementAt(0).pixels.toString());*/
-
-    if (isInsideUpperAutoScrollHotspot(adjustedOffset)) {
-      print('scrolling up');
+    if (isInsideUpperAutoScrollHotspot(details.localPosition)) {
       if (widget.reverse) {
         startAutoScrollingForward();
       } else {
         startAutoScrollingBackward();
       }
-    } else if (isInsideLowerAutoScrollHotspot(adjustedOffset)) {
-      print('scrolling down');
+    } else if (isInsideLowerAutoScrollHotspot(details.localPosition)) {
       if (widget.reverse) {
         startAutoScrollingBackward();
       } else {
@@ -469,8 +410,6 @@ class DragSelectGridViewState extends State<DragSelectGridView>
       return true;
     }());
 
-
-    //offset = adjustLocalToReferenceFrame(offset, scrollController.positions.elementAt(0).pixels - scrollDragStartPos);
     final element = elementFinder(
       (element) => element.containsOffset(ancestor, offset),
     );
